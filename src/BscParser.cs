@@ -1,6 +1,5 @@
 ﻿using System;
 
-using System;
 using System.Collections;
 using System.Text;
 using Microsoft.SqlServer.Server;
@@ -33,20 +32,19 @@ namespace bsc_parser
 
         public  static    System.IO.StreamWriter 	    fs;
 
-        public  ArrayList  xmlColumnList          = new ArrayList();
-
-
 
         public  BscParser(){
             
             
         }
      
-        public  BscParser(string inFile, string  outFile,  string xmlColumnList  ){
+        public  BscParser(string inFile,  string  rowDel,  string  tableName ,string  outFile){
 
-             setInputFile(inFile);
-             setOutputFileString(outFile);
-             setXMLColumnList(xmlColumnList); 
+              setInputFile(inFile);
+              setOutputFileString(outFile);
+              setRowDelimiter(rowDel);
+              destinationTable =tableName;
+        
 
               if (!File.Exists(getOutputFileString()))  {
                         
@@ -94,46 +92,53 @@ namespace bsc_parser
 				  }else{
 						
 						paramString                  = new StringBuilder();
-					    string currentCombinedField  = "";
+
 						StringBuilder   combiner     = new StringBuilder();
 						
 						 for(int i=0; i< dataFields.Length; i++){
 
 							 Console.WriteLine(i.ToString()+": "+dataFields[i]);
                              
-							if(i!=(dataFields.Length-1)){
-							   if(dataFields[i].StartsWith("\"") && !dataFields[i].EndsWith("\"") )
-                               {      combiner.Append("\'").Append(dataFields[i]);
-										  ++i;
-										  while(   !dataFields[i].StartsWith("\"") && !dataFields[i].EndsWith("\"")){
-											  combiner.Append(this.getColumnDelimiter()).Append(dataFields[i]);
-										  ++i;
+							if( i!=(dataFields.Length-1) ){
+                                if(dataFields[i].ToLower().Contains("<?xml")){
+                                    paramString.Append("\'").Append(dataFields[i]);
+                                    while(!dataFields[i].Contains("<?xml")){
+                                        paramString.Append(dataFields[i]);
+                                        ++i;
+                                    }
+                                    paramString.Append("\',").Append(dataFields[i]);
+                                    --i;
 
-										  }
-										  if(dataFields[i].EndsWith("\"")){
-											   combiner.Append(getColumnDelimiter()).Append(dataFields[i]).Append("\'").Append(getColumnDelimiter());
-										  }
-                                           	currentCombinedField=combiner.ToString();
-										    Console.WriteLine("Current combined field: "+currentCombinedField);
-									
-                                            combiner =  new StringBuilder();
-								 }  else 
-                                 {
+                                }else{
+					
+                                 
 									 if(i!=(dataFields.Length-1)){
 
-									 		paramString.Append("\'"+dataFields[i]+"\' ").Append(getColumnDelimiter());
+									 		paramString.Append("\'"+dataFields[i]+"\',");
 									 }else{
 											paramString.Append("\'"+dataFields[i]+"\' ");
 										 
 									 }
 
-								 }
+								 
+                            
 							   
 							
-							}	else {
+							}	
+                            }else {
 					           
-								
+                               
+                               if( i!=(dataFields.Length-1) ){
+                                if(dataFields[i].ToLower().Contains("<?xml")){
+                                    paramString.Append("\'").Append(dataFields[i]);
+                                    while(!dataFields[i].Contains("<?xml")){
+                                        paramString.Append(dataFields[i]);
+                                        ++i;
+                                    }
+                                    paramString.Append("\'").Append(dataFields[i]);
+                                } else{
 								paramString.Append("\'"+dataFields[i]+"\' ");
+                                }
 								
 							}
 							  
@@ -148,7 +153,8 @@ namespace bsc_parser
 			 }
                 
             
-        } catch (Exception ex)
+        } 
+    }catch (Exception ex)
         {
             Console.WriteLine("Error reading table schema: " + ex.Message);
             Console.WriteLine(ex.StackTrace);
@@ -163,27 +169,6 @@ namespace bsc_parser
             
         }
 
-
-    public void setXMLColumnList(string  xmlList){
-
-        string[]  columns  = xmlList.Split(',');
-
-        xmlColumnList = new ArrayList();
-        int colNum   = 0;
-
-          foreach (var item in columns)
-          {
-           
-          if(int.TryParse(item, out colNum)) {
-              colNum = colNum-1;
-               xmlColumnList.Add(colNum); 
-          }
-        
-            
-          }
-
-
-    }
    public  string getRowDelimiter(){
         
        return this.rowDelimiter;
@@ -227,30 +212,45 @@ namespace bsc_parser
     }
      
         static void Main(string[] args) {
+            
+            string  inputFile        = "";
+            string  fieldDelimter    =  "";
+            string  tableName        =  "";
+            string  outputFile       =  "";
 
          	try {	
                 for(int i =0; i< args.Length; i++){
 
-                    if (args[0].ToLower()=="-h" ||args[0].ToLower()=="help" || args[0].ToLower()=="/?" || args[0].ToLower()=="?" ){
+                    if (args[i].ToLower()=="-i" && (args[(i+1)] != null && args[(i+1)].Length!=0)){
+								inputFile =  args[(i+1)];							
+						   }else if (args[i].ToLower()=="-d" && (args[(i+1)] != null && args[(i+1)].Length!=0)){
+								fieldDelimter =args[(i+1)];							
+						   }else if (args[i].ToLower()=="-t" && (args[(i+1)] != null && args[(i+1)].Length!=0)){
+								tableName =  args[(i+1)];							
+						   						
+						   }else if (args[i].ToLower()=="-o" && (args[(i+1)] != null && args[(i+1)].Length!=0)){
+								outputFile =   args[(i+1)];							
+						}else if (args[0].ToLower()=="-h" ||args[0].ToLower()=="help" || args[0].ToLower()=="/?" || args[0].ToLower()=="?" ){
 
                         Console.WriteLine(" This application parses bsc files to handle the  XML content");
                         Console.WriteLine(" Usage:  ");	
-                        Console.WriteLine(" -f: This parameter is used to specify the file to be used. ");
+                        Console.WriteLine(" -i: This parameter is used to specify the file to be used. ");
                         Console.WriteLine(" -d: This parameter is used to specify the column delimiter to be used. ");
-                        Console.WriteLine(" -r: This parameter is used to specify the row delimiter to be used. ");
+                        Console.WriteLine(" -o: This parameter is used to specify the output file ");
                         Console.WriteLine(" -t: This parameter is used to specify the table. ");
-                        Console.WriteLine(" -x: This parameter is used to xml columns numbers. ");
                         Console.WriteLine(" -h: This parameter is used to print this help message.");	
+
+                        new BscParser(inputFile, fieldDelimter, tableName, outputFile);
 
                                         
                     } else{
 
-                         Console.WriteLine("Insufficient number of  arguments");
+                         Console.WriteLine("Unknown argument.  Please  run executable  with  -h  or   help");
 
                     } 
                 }   
 
-
+     
                 
          } catch(Exception e) {
             

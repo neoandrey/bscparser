@@ -1,4 +1,4 @@
-C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:"lib\System.Data.SQLite.dll","lib\Newtonsoft.Json.dll" /out:bin\TranCopy.exe src\BscParser.cs
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:"lib\System.Data.SQLite.dll","lib\Newtonsoft.Json.dll" /out:bin\BscParser.exe src\BscParser.cs
 pause
 xcopy /e /f /y %cd%\lib\report_resources.dll %cd%\bin\
 
