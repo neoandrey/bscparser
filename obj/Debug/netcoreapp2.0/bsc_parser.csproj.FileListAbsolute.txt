@@ -1,0 +1,11 @@
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\obj\Debug\netcoreapp2.0\bsc_parser.csprojAssemblyReference.cache
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\obj\Debug\netcoreapp2.0\bsc_parser.csproj.CoreCompileInputs.cache
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\obj\Debug\netcoreapp2.0\bsc_parser.AssemblyInfoInputs.cache
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\obj\Debug\netcoreapp2.0\bsc_parser.AssemblyInfo.cs
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\bin\Debug\netcoreapp2.0\bsc_parser.deps.json
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\bin\Debug\netcoreapp2.0\bsc_parser.runtimeconfig.json
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\bin\Debug\netcoreapp2.0\bsc_parser.runtimeconfig.dev.json
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\bin\Debug\netcoreapp2.0\bsc_parser.dll
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\bin\Debug\netcoreapp2.0\bsc_parser.pdb
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\obj\Debug\netcoreapp2.0\bsc_parser.dll
+c:\Users\Mobolaji.Aina\Documents\c_sharp\bsc_parser\obj\Debug\netcoreapp2.0\bsc_parser.pdb
