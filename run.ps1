@@ -1,6 +1,6 @@
 ﻿
   cd  $pwd
-  .\bin\BscParser.exe -i "C:\\tmp\\bscstaffreport.csv" -d "," -t bsc_summary - o "C:\\tmp\\bscstaffreport.txt"
+  .\bin\BscParser.exe -i 'C:\\tmp\\bscstaffreport.csv' -d ',' -t bsc_summary -o 'C:\\tmp\\bscstaffreport.txt'
 
  Write-Host "Listing branches..."
  git branch

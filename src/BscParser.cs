@@ -19,7 +19,6 @@ using System.Linq;
 
 namespace bsc_parser
 {
-
     class   BscParser {
 
         public  string    bsvInputFile          =  "";
@@ -31,6 +30,10 @@ namespace bsc_parser
         public  string    destinationTable        =  "";
 
         public  static    System.IO.StreamWriter 	    fs;
+
+        public  bool      parsingXML                  = false;
+
+        public  int       columnCount                = 0;
 
 
         public  BscParser(){
@@ -61,7 +64,8 @@ namespace bsc_parser
 
 	try{
 					using(StreamReader  csvReader = new StreamReader (getInputFile())) { 
-					 int count = 0;
+					 int  count    = 0;
+                     int  colCount = 0;
 					// System.Data.DataTable csvData =  new DataTable();
 					 StringBuilder queryString =  new StringBuilder();
 					 StringBuilder paramString  = new StringBuilder();
@@ -70,16 +74,18 @@ namespace bsc_parser
 				  ++count;
 				  Console.WriteLine("Reading line :"+count+" of "+ (count+csvReader.Peek())+". "+csvReader.Peek()+" records remain.");
 	             
-				 string  singleLine = csvReader.ReadLine();
-				  string[]  dataFields = singleLine.Split(new [] {this.getColumnDelimiter()}, StringSplitOptions.RemoveEmptyEntries);
+				  string  singleLine = csvReader.ReadLine();
+				  string[]  dataFields = singleLine.Split(new [] {","}, StringSplitOptions.RemoveEmptyEntries);
 				   
 				  if(count ==1 && isHeaderRow){
+
+                      columnCount = dataFields.Length;
 						
-					   for (int i=0;  i<dataFields.Length;  i++){
+					   for (int i=0;  i<columnCount;  i++){
 
-						 if(i!=(dataFields.Length-1)){
+						 if(i!=(columnCount-1)){
 
-								queryString.Append("["+dataFields[i]+"]").Append(this.getColumnDelimiter());
+								queryString.Append("["+dataFields[i]+"]").Append(",");
 								
 								
 							}	else {
@@ -91,70 +97,104 @@ namespace bsc_parser
 						 
 				  }else{
 						
-						paramString                  = new StringBuilder();
-
-						StringBuilder   combiner     = new StringBuilder();
-						
 						 for(int i=0; i< dataFields.Length; i++){
 
 							 Console.WriteLine(i.ToString()+": "+dataFields[i]);
+                             Console.WriteLine("colCount: "+colCount.ToString());
                              
-							if( i!=(dataFields.Length-1) ){
-                                if(dataFields[i].ToLower().Contains("<?xml")){
-                                    paramString.Append("\'").Append(dataFields[i]);
-                                    while(!dataFields[i].Contains("<?xml")){
+							if( colCount != columnCount ){
+                                if(dataFields[i].ToLower().StartsWith("\"<?xml") || parsingXML ){
+                                       Console.WriteLine("");
+                                       Console.WriteLine("Parsing XML...");
+                                       Console.WriteLine("");
+                                        if(!parsingXML){
+                                          paramString.Append("\'").Append(dataFields[i]);
+                                          parsingXML = true;
+                                      }
+                                    
+                                    while(!dataFields[i].ToLower().Contains("</repeaterdata>") && i<= (dataFields.Length-1) ){
                                         paramString.Append(dataFields[i]);
                                         ++i;
+                                      if(i==dataFields.Length)break;
                                     }
-                                    paramString.Append("\',").Append(dataFields[i]);
-                                    --i;
+                                    if(i==dataFields.Length)break;
+                                  if(dataFields[i].ToLower().Contains("</repeaterdata>"))  {
+                                        paramString.Append(dataFields[i]).Append("\',");
+                                        parsingXML = false;
+                                        Console.WriteLine("Parse complete.");
+                                        ++colCount;
+                                  }
+
 
                                 }else{
 					
                                  
-									 if(i!=(dataFields.Length-1)){
+									// if(i!=(dataFields.Length-1)){
 
 									 		paramString.Append("\'"+dataFields[i]+"\',");
-									 }else{
+                                             ++colCount;
+									/*  }else{
 											paramString.Append("\'"+dataFields[i]+"\' ");
 										 
 									 }
-
-								 
-                            
-							   
-							
+                                     */
 							}	
                             }else {
 					           
                                
-                               if( i!=(dataFields.Length-1) ){
-                                if(dataFields[i].ToLower().Contains("<?xml")){
-                                    paramString.Append("\'").Append(dataFields[i]);
-                                    while(!dataFields[i].Contains("<?xml")){
+                            
+                               
+                                     if(dataFields[i].ToLower().StartsWith("\"<?xml") || parsingXML ){
+                                      Console.WriteLine("");
+                                      Console.WriteLine("Parsing XML...");
+                                      Console.WriteLine("");
+                                      if(parsingXML==false){
+
+                                          paramString.Append("\'").Append(dataFields[i]);
+                                          parsingXML = true;
+                                      }
+                                    
+                                    
+                                    while( !dataFields[i].ToLower().Contains("</repeaterdata>")){
                                         paramString.Append(dataFields[i]);
                                         ++i;
+                                        if(i==dataFields.Length)break;
                                     }
-                                    paramString.Append("\'").Append(dataFields[i]);
+                                    if(i==dataFields.Length)break;
+                                  if(dataFields[i].ToLower().Contains("</repeaterdata>"))  {
+                                      paramString.Append(dataFields[i]).Append("\'");
+                                      parsingXML = false;
+                                        Console.WriteLine("Parse complete.");
+                                        ++colCount;
+                                  
                                 } else{
-								paramString.Append("\'"+dataFields[i]+"\' ");
+							      	paramString.Append("\'"+dataFields[i]+"\' ");
+                                       ++colCount;
                                 }
 								
-							}
+							
 							  
 						  }
 					
-						fs.WriteLine("INSERT INTO ["+destinationTable+"] ("+queryString.ToString()+" )VALUES("+paramString.ToString()+")");
+						
 					
 				  }
-			 
+			     if(colCount == columnCount)   {
+                     paramString.Length--;
+                      fs.WriteLine("INSERT INTO ["+destinationTable+"] ("+queryString.ToString()+" )VALUES("+paramString.ToString()+")");
+                      colCount = 0;
+                      paramString                  = new StringBuilder();
+					   StringBuilder   combiner     = new StringBuilder();
+                  }	 
+                   
 				  } 
-						  
+	 
 			 }
                 
             
         } 
-    }catch (Exception ex)
+        
+                    }}catch (Exception ex)
         {
             Console.WriteLine("Error reading table schema: " + ex.Message);
             Console.WriteLine(ex.StackTrace);
@@ -207,7 +247,7 @@ namespace bsc_parser
    }
     
     public  void setOutputFileString (string  fileName){
-       this.outputFileString =  this.outputFileString +fileName+".sql";
+       this.outputFileString =  fileName;
 
     }
      
