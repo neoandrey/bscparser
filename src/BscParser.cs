@@ -136,6 +136,7 @@ namespace bsc_parser
                                                     paramString.Append(dataFields[i]);
                                                     ++i;
                                                  }
+                                                  paramString.Append(dataFields[i]);
                                                  paramString.Append("\'").Append(",");
                                                 ++colCount;
                                               
