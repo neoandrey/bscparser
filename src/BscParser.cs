@@ -240,18 +240,14 @@ namespace bsc_parser
                         Console.WriteLine(" -t: This parameter is used to specify the table. ");
                         Console.WriteLine(" -h: This parameter is used to print this help message.");	
 
-                        new BscParser(inputFile, fieldDelimter, tableName, outputFile);
-
+                       
                                         
-                    } else{
-
-                         Console.WriteLine("Unknown argument.  Please  run executable  with  -h  or   help");
-
                     } 
                 }   
 
      
-                
+               new BscParser(inputFile, fieldDelimter, tableName, outputFile);
+  
          } catch(Exception e) {
             
                 Console.WriteLine(e.Message);

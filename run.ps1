@@ -1,4 +1,7 @@
 ﻿
+  cd  $pwd
+  .\bin\BscParser.exe -i "C:\\tmp\\bscstaffreport.csv" -d "," -t bsc_summary - o "C:\\tmp\\bscstaffreport.txt"
+
  Write-Host "Listing branches..."
  git branch
  $shouldCommit = Read-Host -Prompt "Do you want to commit the application on the current  branch? (type  'y' or  'n')"
@@ -15,9 +18,6 @@
     
  }
  
- cd  $pwd
- cmd /c '.\bin\BscParser.exe -i "C:\\tmp\\bscstaffreport.csv" -d "," -t bsc_summary - o "C:\\tmp\\bscstaffreport.txt"'
-
  $current_branch_string = Get-Content ".git/HEAD"
  $current_branch        =  $current_branch_string.Replace("ref: refs/heads/","")
  
