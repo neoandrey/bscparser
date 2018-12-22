@@ -75,7 +75,7 @@ namespace bsc_parser
 				  Console.WriteLine("Reading line :"+count+" of "+ (count+csvReader.Peek())+". "+csvReader.Peek()+" records remain.");
 	             
 				  string  singleLine = csvReader.ReadLine();
-				  string[]  dataFields = singleLine.Split(new [] {","}, StringSplitOptions.RemoveEmptyEntries);
+				  string[]  dataFields = singleLine.Split(new [] {","}, StringSplitOptions.None);
 				   
 				  if(count ==1 && isHeaderRow){
 
@@ -115,7 +115,7 @@ namespace bsc_parser
                                     while(!dataFields[i].ToLower().Contains("</repeaterdata>") && i<= (dataFields.Length-1) ){
                                         paramString.Append(dataFields[i]);
                                         ++i;
-                                      if(i==dataFields.Length)break;
+                                       if(i==dataFields.Length)break;
                                     }
                                     if(i==dataFields.Length)break;
                                   if(dataFields[i].ToLower().Contains("</repeaterdata>"))  {
@@ -130,9 +130,19 @@ namespace bsc_parser
 					
                                  
 									// if(i!=(dataFields.Length-1)){
-
-									 		paramString.Append("\'"+dataFields[i]+"\',");
+                                             if(dataFields[i].Trim().StartsWith("\"") ){
+                                                 paramString.Append("\'");
+                                                 while (!dataFields[(i)].Trim().EndsWith("\"")){
+                                                    paramString.Append(dataFields[i]);
+                                                    ++i;
+                                                 }
+                                                 paramString.Append("\'").Append(",");
+                                                ++colCount;
+                                              
+                                             }else{
+									 		paramString.Append("\'").Append(dataFields[i]).Append("\',");
                                              ++colCount;
+                                             }
 									/*  }else{
 											paramString.Append("\'"+dataFields[i]+"\' ");
 										 
@@ -168,7 +178,7 @@ namespace bsc_parser
                                         ++colCount;
                                   
                                 } else{
-							      	paramString.Append("\'"+dataFields[i]+"\' ");
+							      	paramString.Append("\'"+dataFields[i]+"\'");
                                        ++colCount;
                                 }
 								
@@ -182,9 +192,9 @@ namespace bsc_parser
 			     if(colCount == columnCount)   {
                      paramString.Length--;
                       fs.WriteLine("INSERT INTO ["+destinationTable+"] ("+queryString.ToString()+" )VALUES("+paramString.ToString()+")");
-                      colCount = 0;
+                      colCount                     = 0;
                       paramString                  = new StringBuilder();
-					   StringBuilder   combiner     = new StringBuilder();
+					   StringBuilder   combiner    = new StringBuilder();
                   }	 
                    
 				  } 
@@ -206,7 +216,8 @@ namespace bsc_parser
             }
 
             
-            
+         fs.Flush();
+         fs.Close();   
         }
 
    public  string getRowDelimiter(){
