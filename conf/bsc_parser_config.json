@@ -9,6 +9,6 @@
  ,"parse_output_sql_path":"output\\bsc_parser_output.sql"		
  ,"use_trusted_authentication_dest":	true              /* use  windows  authentication */
  ,"column_delimiter":  ","		
- ,"insert_mode": 1  									/* 0: line-by-line  insert, 1: batch-insert-mode */
- ,"batch_size":50
+ ,"insert_mode": 0									/* 0: line-by-line  insert, 1: batch-insert-mode */
+ ,"batch_size":25
  }

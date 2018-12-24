@@ -102,47 +102,48 @@ namespace bsc_parser
                    int  counter2            = 0;
                    string  line2            = "";
                      System.IO.StreamReader file2 =  new System.IO.StreamReader(BscParserUtiLibrary.parseOutputSqlFile); 
+                        
 
                      while((line2 = file2.ReadLine()) != null)  
                         { 
-                             ++counter2;
+                            
                              line2 = " USE "+BscParserUtiLibrary.destinationDatabase+"; "+line2;
                             Console.WriteLine("Running command on line: {0} .", counter2+": "+line2);
                             BscParserUtiLibrary.writeToLog("Running command on line: {0} ."+ counter2+": "+line2);
                             
                             batcher.Append(line2 );
                             if(counter2 % BscParserUtiLibrary.batchSize==0){
-                               BscParserUtiLibrary.executeScript(batcher.ToString(), BscParserUtiLibrary.getConnectionString());  
-                               batcher.Remove(0, batcher.Length);
+                             lock(BscParserUtiLibrary.locker)  {
+                                 string tempScript= batcher.ToString();
+                                Thread insertThread  = 	new Thread(()=> {
+                                     BscParserUtiLibrary.executeScript(tempScript, BscParserUtiLibrary.getConnectionString());  
+                                 });
+                                 insertThread.Start();
+                                 insertThread.Join();
+                                 batcher = new  StringBuilder();
+                             }
+                             
                             }
 
-                        
-                            counter2++;  
-                       
+                         ++counter2;
                         }  
+                         lock(BscParserUtiLibrary.locker)   {
+                                string tempScript2= batcher.ToString();
+                              Thread  finalInsertThread   = 	new Thread(()=> {
+                                BscParserUtiLibrary.executeScript(tempScript2, BscParserUtiLibrary.getConnectionString()); 
 
-                        file2.Close();  
-                      
-
-
-                  if(File.Exists(BscParserUtiLibrary.parseOutputSqlFile)){
-                      string  insertScript  = File.ReadAllText(BscParserUtiLibrary.parseOutputSqlFile);
-                       insertScript =  " USE "+BscParserUtiLibrary.destinationDatabase+"; "+insertScript;
-                       BscParserUtiLibrary.executeScript(insertScript, BscParserUtiLibrary.getConnectionString()); 
-                  } else{
-                        Console.WriteLine("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile );
-                         BscParserUtiLibrary.writeToLog("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile);
-
-
-                      }
-
-
+                                 });
+                                 finalInsertThread.Start();
+                                 finalInsertThread.Join();
+                                file2.Close();  
+                                 batcher = new  StringBuilder(); 
+                             }
                  break;
                  default:
 
                       if(File.Exists(BscParserUtiLibrary.parseOutputSqlFile)){
                       string  insertScript  = File.ReadAllText(BscParserUtiLibrary.parseOutputSqlFile);
-                       BscParserUtiLibrary.executeScript(insertScript, BscParserUtiLibrary.getConnectionString()); 
+                       BscParserUtiLibrary.executeScript(insertScript,BscParserUtiLibrary.getConnectionString()); 
                   } else{
                         Console.WriteLine("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile );
                          BscParserUtiLibrary.writeToLog("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile);

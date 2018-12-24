@@ -2,7 +2,7 @@ C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:"lib\System.Data.SQLite
 
 C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:"lib\System.Data.SQLite.dll","lib\Newtonsoft.Json.dll","lib\resources.dll" /out:bin\BscParser.exe src\BscParser.cs
 pause
-xcopy /e /f /y %cd%\lib\*.*  %cd%\bin\
+xcopy /e /f /y /d %cd%\lib\*.*  %cd%\bin\
 
 if not exist .git\ (
    git init 
