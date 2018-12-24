@@ -20,7 +20,7 @@
     
  }
  
- $current_branch_string = Get-Content ".git/HEAD"
+ $current_branch_string = Get-Content ".git/HEAD" 
  $current_branch        =  $current_branch_string.Replace("ref: refs/heads/","")
  
  if ($current_branch -ne "master" ){
