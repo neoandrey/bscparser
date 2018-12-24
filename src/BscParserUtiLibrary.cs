@@ -45,6 +45,7 @@ namespace bsc_parser
                 public  const   int                          BATCH_INSERT_MODE                   = 1;
                 public  static  string                       destinationConnectionString         = "";
                 public  static readonly object               locker                              = new object();
+                public  static  int                          batchSize                           = 10;
 
                 public   BscParserUtiLibrary(){
 
@@ -182,12 +183,13 @@ namespace bsc_parser
                         destinationDatabase       	      = bscConfig.destination_database;
                         destinationPort           	      = bscConfig.destination_port;
                         destinationTable                  = bscConfig.destination_table;
-                        sourceFilePath                    = bscConfig.source_file_path;
+                        sourceFilePath                    = bscConfig.source_file_path.Contains("\\\\")? bscConfig.source_file_path:bscConfig.source_file_path.Replace("\\", "\\\\");;
                         shouldUseTrusted                  = bscConfig.use_trusted_authentication_dest;
                         shouldCreateTable                 = bscConfig.should_create_table;
-                        parseOutputSqlFile                = bscConfig.parse_output_sql_path;
+                        parseOutputSqlFile                = bscConfig.parse_output_sql_path.Contains("\\\\")? bscConfig.parse_output_sql_path:bscConfig.parse_output_sql_path.Replace("\\", "\\\\");;
                         parseOutputTableScript            = bscConfig.destination_table_create_script;
                         columnDelimiter                   = bscConfig.column_delimiter;
+                        batchSize                         = bscConfig.batch_size;    
 
                        Console.WriteLine("Configurations have been successfully initialised.");                  
 

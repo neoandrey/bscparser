@@ -37,6 +37,7 @@ namespace bsc_parser
 		public bool         use_trusted_authentication_dest { set; get;}
         public string       column_delimiter{set; get;}
         public int          insert_mode {set; get;}
+        public int          batch_size {set; get;}
 
     }
 }

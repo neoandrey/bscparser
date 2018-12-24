@@ -98,9 +98,36 @@ namespace bsc_parser
                  break;
                  case BscParserUtiLibrary.BATCH_INSERT_MODE:
 
+                   StringBuilder  batcher  =  new StringBuilder();
+                   int  counter2            = 0;
+                   string  line2            = "";
+                     System.IO.StreamReader file2 =  new System.IO.StreamReader(BscParserUtiLibrary.parseOutputSqlFile); 
+
+                     while((line2 = file2.ReadLine()) != null)  
+                        { 
+                             ++counter2;
+                             line2 = " USE "+BscParserUtiLibrary.destinationDatabase+"; "+line2;
+                            Console.WriteLine("Running command on line: {0} .", counter2+": "+line2);
+                            BscParserUtiLibrary.writeToLog("Running command on line: {0} ."+ counter2+": "+line2);
+                            
+                            batcher.Append(line2 );
+                            if(counter2 % BscParserUtiLibrary.batchSize==0){
+                               BscParserUtiLibrary.executeScript(batcher.ToString(), BscParserUtiLibrary.getConnectionString());  
+                               batcher.Remove(0, batcher.Length);
+                            }
+
+                        
+                            counter2++;  
+                       
+                        }  
+
+                        file2.Close();  
+                      
+
+
                   if(File.Exists(BscParserUtiLibrary.parseOutputSqlFile)){
                       string  insertScript  = File.ReadAllText(BscParserUtiLibrary.parseOutputSqlFile);
-                      insertScript =  " USE "+BscParserUtiLibrary.destinationDatabase+"; "+insertScript;
+                       insertScript =  " USE "+BscParserUtiLibrary.destinationDatabase+"; "+insertScript;
                        BscParserUtiLibrary.executeScript(insertScript, BscParserUtiLibrary.getConnectionString()); 
                   } else{
                         Console.WriteLine("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile );
@@ -143,7 +170,8 @@ namespace bsc_parser
 					
                     }else{
 					
-                    		fs = File.AppendText(getOutputFileString());
+                    		File.Delete(getOutputFileString());
+                            fs = File.CreateText(getOutputFileString());
 					
                     } 
 
