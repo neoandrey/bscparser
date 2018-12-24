@@ -1,0 +1,13 @@
+ {
+ "destination_server":"localhost"	
+ ,"destination_database":  "staging"		
+ ,"destination_port":	1433	
+ ,"destination_table":	"bsc_summary_3"	
+ ,"destination_table_create_script":".\\sql\\dest_table_script.sql"	
+ ,"source_file_path": "C:\\tmp\\bscstaffreport.csv"		
+ ,"should_create_table": true			
+ ,"parse_output_sql_path":"output\\bsc_parser_output.sql"		
+ ,"use_trusted_authentication_dest":	true
+ ,"column_delimiter":  ","		
+ ,"insert_mode": 0  /* 0: line-by-line  insert, 1: batch-insert-mode */		
+ }

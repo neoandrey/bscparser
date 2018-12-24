@@ -1,6 +1,8 @@
 ﻿
   cd  $pwd
-  .\bin\BscParser.exe -i 'C:\\tmp\\bscstaffreport.csv' -d ',' -t bsc_summary -o 'C:\\tmp\\bscstaffreport.txt'
+ # .\bin\BscParser.exe -i 'C:\\tmp\\bscstaffreport.csv' -d ',' -t bsc_summary -o 'C:\\tmp\\bscstaffreport.txt'
+ 
+ .\bin\BscParser.exe -c '.\conf\bsc_parser_config.json'
 
  Write-Host "Listing branches..."
  git branch
@@ -33,7 +35,7 @@
     } 
  }
 
- $push_response=  Read-Host -Prompt "Do you want to push to the remote master branch? (type  'y' or  'n')"
+$push_response=  Read-Host -Prompt "Do you want to push to the remote master branch? (type  'y' or  'n')"
  while ($push_response -eq $null){
        $push_response=  Read-Host -Prompt "Do you want to push to the remote master branch? (type  'y' or  'n')"
  }

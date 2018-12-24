@@ -1,6 +1,8 @@
-C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:"lib\System.Data.SQLite.dll","lib\Newtonsoft.Json.dll" /out:bin\BscParser.exe src\BscParser.cs
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:"lib\System.Data.SQLite.dll","lib\Newtonsoft.Json.dll","lib\System.Net.Http.dll"  /t:library  /out:lib\resources.dll src\ConnectionCipher.cs  src\ConnectionProperty.cs src\BscParserConfiguration.cs src\BscParserUtiLibrary.cs 
+
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /r:"lib\System.Data.SQLite.dll","lib\Newtonsoft.Json.dll","lib\resources.dll" /out:bin\BscParser.exe src\BscParser.cs
 pause
-xcopy /e /f /y %cd%\lib\report_resources.dll %cd%\bin\
+xcopy /e /f /y %cd%\lib\*.*  %cd%\bin\
 
 if not exist .git\ (
    git init 

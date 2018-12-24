@@ -21,31 +21,119 @@ namespace bsc_parser
 {
     class   BscParser {
 
-        public  string    bsvInputFile          =  "";
-        public  bool      isHeaderRow           =  true;
-        public  string    rowDelimiter           =  "";
-        public  string    columnDelimiter         =  "";
-        public  string    outputFileString         = Directory.GetCurrentDirectory()+"\\";
+        public  string    bsvInputFile              =  "";
+        public  bool      isHeaderRow               =  true;
+        public  string    rowDelimiter              =  "";
+        public  string    columnDelimiter           =  "";
+        public  string    outputFileString          = Directory.GetCurrentDirectory()+"\\";
 
-        public  string    destinationTable        =  "";
+        public  string    destinationTable          =  "";
 
-        public  static    System.IO.StreamWriter 	    fs;
+        public  static    System.IO.StreamWriter  fs;
 
-        public  bool      parsingXML                  = false;
+        public  bool      parsingXML                = false;
 
-        public  int       columnCount                = 0;
+        public  int       columnCount               = 0;
 
 
         public  BscParser(){
+            new  BscParserUtiLibrary();
+            startBscParser();
             
             
         }
-     
-        public  BscParser(string inFile,  string  rowDel,  string  tableName ,string  outFile){
+      public  BscParser(string configFile){
+            new  BscParserUtiLibrary(configFile);
+            startBscParser();
+            
+        }
+
+        public void startBscParser(){
+
+            new  BscParser(BscParserUtiLibrary.sourceFilePath,BscParserUtiLibrary.columnDelimiter,BscParserUtiLibrary.destinationTable,BscParserUtiLibrary.parseOutputSqlFile );
+
+             if(BscParserUtiLibrary.shouldCreateTable){
+
+                 if(File.Exists(BscParserUtiLibrary.parseOutputTableScript)){
+
+                  string  createScript =    File.ReadAllText(BscParserUtiLibrary.parseOutputTableScript).Replace("DESTINATION_TABLE_NAME",BscParserUtiLibrary.destinationTable ).Replace("DESTINATION_DATABASE_NAME",BscParserUtiLibrary.destinationDatabase );
+                  BscParserUtiLibrary.executeScript(createScript, BscParserUtiLibrary.getConnectionString());
+
+                 }else {
+
+                     Console.WriteLine("The destination table create script path is not valid: "+BscParserUtiLibrary.parseOutputTableScript );
+                      BscParserUtiLibrary.writeToLog("The destination table create script path is not valid: "+BscParserUtiLibrary.parseOutputTableScript);
+                 }
+                
+             }
+
+             switch(BscParserUtiLibrary.tableInsertMode){
+
+                 case BscParserUtiLibrary.SINGLE_INSERT_MODE:
+                      if(File.Exists(BscParserUtiLibrary.parseOutputSqlFile)){
+                        int counter = 0;  
+                        string line;  
+                        System.IO.StreamReader file =  new System.IO.StreamReader(BscParserUtiLibrary.parseOutputSqlFile);  
+                        while((line = file.ReadLine()) != null)  
+                        { 
+                             line = " USE "+BscParserUtiLibrary.destinationDatabase+"; "+line;
+                            Console.WriteLine("Running command on line: {0} .", counter+": "+line);
+                            BscParserUtiLibrary.writeToLog("Running command on line: {0} ."+ counter+": "+line);
+
+                            BscParserUtiLibrary.executeScript(line, BscParserUtiLibrary.getConnectionString());  
+                            counter++;  
+                       
+                        }  
+
+                        file.Close();  
+                      
+                      }  else{
+                        Console.WriteLine("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile );
+                         BscParserUtiLibrary.writeToLog("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile);
+
+
+                      }
+
+
+                 break;
+                 case BscParserUtiLibrary.BATCH_INSERT_MODE:
+
+                  if(File.Exists(BscParserUtiLibrary.parseOutputSqlFile)){
+                      string  insertScript  = File.ReadAllText(BscParserUtiLibrary.parseOutputSqlFile);
+                      insertScript =  " USE "+BscParserUtiLibrary.destinationDatabase+"; "+insertScript;
+                       BscParserUtiLibrary.executeScript(insertScript, BscParserUtiLibrary.getConnectionString()); 
+                  } else{
+                        Console.WriteLine("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile );
+                         BscParserUtiLibrary.writeToLog("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile);
+
+
+                      }
+
+
+                 break;
+                 default:
+
+                      if(File.Exists(BscParserUtiLibrary.parseOutputSqlFile)){
+                      string  insertScript  = File.ReadAllText(BscParserUtiLibrary.parseOutputSqlFile);
+                       BscParserUtiLibrary.executeScript(insertScript, BscParserUtiLibrary.getConnectionString()); 
+                  } else{
+                        Console.WriteLine("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile );
+                         BscParserUtiLibrary.writeToLog("The output script path is not valid: "+BscParserUtiLibrary.parseOutputSqlFile);
+
+
+                      }
+                    break;
+
+
+             }
+            
+                BscParserUtiLibrary.closeLogFile();
+        }
+        public  BscParser(string inFile,  string  colDel,  string  tableName ,string  outFile){
 
               setInputFile(inFile);
               setOutputFileString(outFile);
-              setRowDelimiter(rowDel);
+              setColumnDelimiter(colDel);
               destinationTable =tableName;
         
 
@@ -59,10 +147,10 @@ namespace bsc_parser
 					
                     } 
 
-            if (File.Exists(getInputFile())){
+               if (File.Exists(getInputFile())){
 
 
-	try{
+	           try{
 					using(StreamReader  csvReader = new StreamReader (getInputFile())) { 
 					 int  count    = 0;
                      int  colCount = 0;
@@ -73,9 +161,9 @@ namespace bsc_parser
  			 while (csvReader.Peek() >= 0) {
 				  ++count;
 				  Console.WriteLine("Reading line :"+count+" of "+ (count+csvReader.Peek())+". "+csvReader.Peek()+" records remain.");
-	             
+	              BscParserUtiLibrary.writeToLog("Reading line :"+count+" of "+ (count+csvReader.Peek())+". "+csvReader.Peek()+" records remain.");
 				  string  singleLine = csvReader.ReadLine();
-				  string[]  dataFields = singleLine.Split(new [] {","}, StringSplitOptions.None);
+				  string[]  dataFields = singleLine.Split(new [] {this.getColumnDelimiter()}, StringSplitOptions.None);
 				   
 				  if(count ==1 && isHeaderRow){
 
@@ -100,6 +188,7 @@ namespace bsc_parser
 						 for(int i=0; i< dataFields.Length; i++){
 
 							 Console.WriteLine(i.ToString()+": "+dataFields[i]);
+                             BscParserUtiLibrary.writeToLog(i.ToString()+": "+dataFields[i]);
                              Console.WriteLine("colCount: "+colCount.ToString());
                              
 							if( colCount != columnCount ){
@@ -122,6 +211,7 @@ namespace bsc_parser
                                         paramString.Append(dataFields[i]).Append("\',");
                                         parsingXML = false;
                                         Console.WriteLine("Parse complete.");
+                                        BscParserUtiLibrary.writeToLog("Parse complete.");
                                         ++colCount;
                                   }
 
@@ -129,7 +219,6 @@ namespace bsc_parser
                                 }else{
 					
                                  
-									// if(i!=(dataFields.Length-1)){
                                              if(dataFields[i].Trim().StartsWith("\"") ){
                                                  paramString.Append("\'");
                                                  while (!dataFields[(i)].Trim().EndsWith("\"")){
@@ -144,11 +233,8 @@ namespace bsc_parser
 									 		paramString.Append("\'").Append(dataFields[i]).Append("\',");
                                              ++colCount;
                                              }
-									/*  }else{
-											paramString.Append("\'"+dataFields[i]+"\' ");
-										 
-									 }
-                                     */
+		
+                                     
 							}	
                             }else {
 					           
@@ -158,6 +244,7 @@ namespace bsc_parser
                                      if(dataFields[i].ToLower().StartsWith("\"<?xml") || parsingXML ){
                                       Console.WriteLine("");
                                       Console.WriteLine("Parsing XML...");
+                                       BscParserUtiLibrary.writeToLog("Parsing XML...");
                                       Console.WriteLine("");
                                       if(parsingXML==false){
 
@@ -208,7 +295,10 @@ namespace bsc_parser
                     }}catch (Exception ex)
         {
             Console.WriteLine("Error reading table schema: " + ex.Message);
+            BscParserUtiLibrary.writeToLog("Error reading table schema: " + ex.Message);
             Console.WriteLine(ex.StackTrace);
+            BscParserUtiLibrary.writeToLog(ex.StackTrace);
+            
 
         }
 
@@ -262,6 +352,7 @@ namespace bsc_parser
        this.outputFileString =  fileName;
 
     }
+
      
         static void Main(string[] args) {
             
@@ -269,6 +360,7 @@ namespace bsc_parser
             string  fieldDelimter    =  "";
             string  tableName        =  "";
             string  outputFile       =  "";
+            string  configFile       =  "";
 
          	try {	
                 for(int i =0; i< args.Length; i++){
@@ -282,10 +374,13 @@ namespace bsc_parser
 						   						
 						   }else if (args[i].ToLower()=="-o" && (args[(i+1)] != null && args[(i+1)].Length!=0)){
 								outputFile =   args[(i+1)];							
+						 }else if (args[i].ToLower()=="-c" && (args[(i+1)] != null && args[(i+1)].Length!=0)){
+								configFile =   args[(i+1)];							
 						}else if (args[0].ToLower()=="-h" ||args[0].ToLower()=="help" || args[0].ToLower()=="/?" || args[0].ToLower()=="?" ){
 
                         Console.WriteLine(" This application parses bsc files to handle the  XML content");
                         Console.WriteLine(" Usage:  ");	
+                         Console.WriteLine("-c: This parameter is used to specify that a JSON  configuration file should be parsed by the application ");
                         Console.WriteLine(" -i: This parameter is used to specify the file to be used. ");
                         Console.WriteLine(" -d: This parameter is used to specify the column delimiter to be used. ");
                         Console.WriteLine(" -o: This parameter is used to specify the output file ");
@@ -296,9 +391,22 @@ namespace bsc_parser
                                         
                     } 
                 }   
+ 
+             if (string.IsNullOrEmpty(configFile)  &&  !(string.IsNullOrEmpty(inputFile) || string.IsNullOrEmpty(fieldDelimter) || string.IsNullOrEmpty(tableName) ||string.IsNullOrEmpty(outputFile) )  ){
 
+                new BscParser(inputFile, fieldDelimter, tableName, outputFile);
+
+             } else if(!string.IsNullOrEmpty(configFile) ){ 
+
+                    new BscParser(configFile); 
+
+             }else{
+
+                new BscParser(); 
+
+             }
      
-               new BscParser(inputFile, fieldDelimter, tableName, outputFile);
+               
   
          } catch(Exception e) {
             
