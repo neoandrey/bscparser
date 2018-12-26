@@ -216,28 +216,39 @@ namespace bsc_parser
 						
 						 for(int i=0; i< dataFields.Length; i++){
 
-							 Console.WriteLine(i.ToString()+": "+dataFields[i]);
-                             BscParserUtiLibrary.writeToLog(i.ToString()+": "+dataFields[i]);
-                             Console.WriteLine("colCount: "+colCount.ToString());
+							   Console.WriteLine(i.ToString()+": "+dataFields[i]);
+                               BscParserUtiLibrary.writeToLog(i.ToString()+": "+dataFields[i]);
+                               Console.WriteLine("colCount: "+colCount.ToString());
+                               BscParserUtiLibrary.writeToLog("colCount: "+colCount.ToString());
                              
 							if( colCount != columnCount ){
-                                if(dataFields[i].ToLower().StartsWith("\"<?xml") || parsingXML ){
-                                       Console.WriteLine("");
-                                       Console.WriteLine("Parsing XML...");
-                                       Console.WriteLine("");
+                                if(dataFields[i].Trim().Contains("<?xml") ||dataFields[i].Trim().StartsWith("\"<?xml") || parsingXML ){
+                                        Console.WriteLine("");
                                         if(!parsingXML){
-                                          paramString.Append("\'").Append(dataFields[i]);
-                                          parsingXML = true;
+                                          parsingXML = true; 
+                                          Console.WriteLine("Parsing XML...");
+                                          BscParserUtiLibrary.writeToLog("Parsing XML...");
+                                          Console.WriteLine("");                                                                     
                                       }
                                     
-                                    while(!dataFields[i].ToLower().Contains("</repeaterdata>") && i<= (dataFields.Length-1) ){
-                                        paramString.Append(dataFields[i]);
-                                        ++i;
+                                    while( i<= (dataFields.Length-1) && !dataFields[i].ToLower().Contains("</repeaterdata>")){
+                                        if(dataFields[i].ToLower().Trim().Contains("<?xml") ||dataFields[i].ToLower().Trim().StartsWith("\"<?xml")){
+                                             paramString.Append("\'");
+                                             paramString.Append(dataFields[i].Trim().Substring(1));
+                                        }else{
+                                           paramString.Append(dataFields[i].Trim());  
+                                        }
+                                      
+                                          ++i;
                                        if(i==dataFields.Length)break;
                                     }
                                     if(i==dataFields.Length)break;
                                   if(dataFields[i].ToLower().Contains("</repeaterdata>"))  {
-                                        paramString.Append(dataFields[i]).Append("\',");
+                                      if(dataFields[i].ToLower().Trim().Contains("\"<?xml") ){
+                                          dataFields[i] = dataFields[i].Replace("\"<?xml", "\'<?xml");
+                                      }
+                                        paramString.Append(dataFields[i].Trim().Substring(0,dataFields[i].Trim().Length-1));
+                                        paramString.Append("\',");
                                         parsingXML = false;
                                         Console.WriteLine("Parse complete.");
                                         BscParserUtiLibrary.writeToLog("Parse complete.");
@@ -267,30 +278,36 @@ namespace bsc_parser
 							}	
                             }else {
 					           
-                               
-                            
-                               
-                                     if(dataFields[i].ToLower().StartsWith("\"<?xml") || parsingXML ){
+                                if(dataFields[i].Contains("<?xml") ||dataFields[i].Trim().StartsWith("\"<?xml") || parsingXML ){
                                       Console.WriteLine("");
-                                      Console.WriteLine("Parsing XML...");
-                                       BscParserUtiLibrary.writeToLog("Parsing XML...");
-                                      Console.WriteLine("");
-                                      if(parsingXML==false){
-
-                                          paramString.Append("\'").Append(dataFields[i]);
+                                      
+                                      if(!parsingXML){
+                                          Console.WriteLine("Parsing XML...");
+                                          BscParserUtiLibrary.writeToLog("Parsing XML...");
+                                          Console.WriteLine("");
                                           parsingXML = true;
                                       }
-                                    
-                                    
+
                                     while( !dataFields[i].ToLower().Contains("</repeaterdata>")){
-                                        paramString.Append(dataFields[i]);
+                                        if(dataFields[i].ToLower().Contains("<?xml") || dataFields[i].ToLower().Trim().StartsWith("\"<?xml")){
+                                             paramString.Append("\'");
+                                             paramString.Append(dataFields[i].Trim().Substring(1));
+                                        }else{
+                                              paramString.Append(dataFields[i]);  
+                                        }
+                                                                                 
                                         ++i;
                                         if(i==dataFields.Length)break;
                                     }
                                     if(i==dataFields.Length)break;
                                   if(dataFields[i].ToLower().Contains("</repeaterdata>"))  {
-                                      paramString.Append(dataFields[i]).Append("\'");
-                                      parsingXML = false;
+                                                         if(dataFields[i].ToLower().Trim().Contains("\"<?xml") ){
+                                          dataFields[i] = dataFields[i].Replace("\"<?xml", "\'<?xml");
+                                      }
+ 
+                                        paramString.Append(dataFields[i].Trim().Substring(0,dataFields[i].Trim().Length-1));
+                                        paramString.Append("\'");
+                                        parsingXML = false;
                                         Console.WriteLine("Parse complete.");
                                         ++colCount;
                                   
@@ -307,8 +324,8 @@ namespace bsc_parser
 					
 				  }
 			     if(colCount == columnCount)   {
-                     paramString.Length--;
-                      fs.WriteLine("INSERT INTO ["+destinationTable+"] ("+queryString.ToString()+" )VALUES("+paramString.ToString()+")");
+                       paramString.Length--;
+                      fs.WriteLine("INSERT INTO ["+destinationTable+"] ("+queryString.ToString()+" )VALUES("+paramString.ToString().Replace("\"\"","\"").Replace("&#xB;", " ")+")");
                       colCount                     = 0;
                       paramString                  = new StringBuilder();
 					   StringBuilder   combiner    = new StringBuilder();
